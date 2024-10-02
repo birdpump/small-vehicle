@@ -1,0 +1,91 @@
+.WebRTC_Camera-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /*height: 100vh;*/
+    aspect-ratio: 16 / 9; /* Sets the aspect ratio to 16:9 */
+    background-color: black;
+    position: relative;
+}
+
+.connectBtn {
+    width: 120px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.camera-container {
+    flex: 1;
+}
+
+.stat-container {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.35);
+    gap: 10px;
+    position: absolute;
+    right: 0;
+    bottom: 0px;
+    padding: 4px;
+}
+
+.stats {
+    font-size: 13px;
+    color: white;
+    margin: 0;
+    line-height: 1;
+    user-select: none;
+}
+
+.loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    user-select: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.loading-text {
+    color: white;
+    font-size: 14px;
+}
+
+.disconnected-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    user-select: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.warning-icon {
+    width: 80px;
+    -webkit-user-drag: none;
+}
+
+.disconnected-text {
+    color: white;
+    font-size: 14px;
+}
+
+.test{
+    height: unset;
+}
