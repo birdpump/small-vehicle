@@ -1,2 +1,3 @@
 .idea
 react_web_interface/frontend/node_modules
+.venv
