@@ -1,13 +1,35 @@
 // GamepadComponent.jsx
-
 import React, { useState, useEffect } from 'react';
+import WebSocket from 'isomorphic-ws';
 
 const GamepadComponent = () => {
   const [gamepads, setGamepads] = useState([]);
   const [buttonStates, setButtonStates] = useState({});
   const [axisStates, setAxisStates] = useState({});
+  const [ws, setWs] = useState(null);
 
   useEffect(() => {
+    const connectWebSocket = () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        return;
+      }
+
+      const socket = new WebSocket('ws://localhost:8765');
+      socket.onopen = () => {
+        console.log('WebSocket connected');
+        setWs(socket);
+      };
+      socket.onclose = () => {
+        console.log('WebSocket disconnected. Reconnecting...');
+        setTimeout(connectWebSocket, 1000);
+      };
+      socket.onerror = (error) => {
+        console.log('WebSocket error:', error);
+      };
+    };
+
+    connectWebSocket();
+
     const handleGamepadConnected = (event) => {
       console.log('A gamepad connected:', event.gamepad);
       updateGamepadList();
@@ -50,6 +72,10 @@ const GamepadComponent = () => {
       setButtonStates(newButtonStates);
       setAxisStates(newAxisStates);
 
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ buttons: newButtonStates, axes: newAxisStates }));
+      }
+
       animationFrameId = requestAnimationFrame(pollGamepads);
     };
 
@@ -59,8 +85,12 @@ const GamepadComponent = () => {
       window.removeEventListener('gamepadconnected', handleGamepadConnected);
       window.removeEventListener('gamepaddisconnected', handleGamepadDisconnected);
       cancelAnimationFrame(animationFrameId);
+
+      if (ws) {
+        ws.close();
+      }
     };
-  }, [gamepads]);
+  }, [gamepads, ws]);
 
   // Helper functions to get SVG element styles based on button/axis states
   const getButtonFill = (buttonName) => {
