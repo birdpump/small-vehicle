@@ -48,7 +48,7 @@ const WebRTCComponent = () => {
         }).then(() => {
             console.log("Requesting offer")
             const offer = pcRef.current.localDescription;
-            return fetch('http://localhost:8080/offer', { //change this to the actual server later
+            return fetch('http://10.101.145.233:8080/offer', { //change this to the actual server later
                 body: JSON.stringify({
                     sdp: offer.sdp,
                     type: offer.type,
@@ -218,9 +218,9 @@ const WebRTCComponent = () => {
                     </div>
 
                 ) : (
-                    <ReactPlayer url={stream} playing={true} width="100%" height="100%" volume={0} muted={true}
+                    <div className="camera-stream"><ReactPlayer url={stream} playing={true} width="100%" height="100%" volume={0} muted={true}
                                  controls={false} onError={handleError} onEnded={streamEnded} onBuffer={bufferIssue}
-                                 onReady={streamReady} onStart={streamStarted} onPause={streamPaused}/>
+                                 onReady={streamReady} onStart={streamStarted} onPause={streamPaused}/></div>
                 )}
 
                 {isLoading &&

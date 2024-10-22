@@ -1,42 +1,50 @@
 // GamepadComponent.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import WebSocket from 'isomorphic-ws';
 
-import React, { useState, useEffect } from 'react';
+let ws; // Initialize the WebSocket outside of the component
 
 const GamepadComponent = () => {
-  const [gamepads, setGamepads] = useState([]);
   const [buttonStates, setButtonStates] = useState({});
   const [axisStates, setAxisStates] = useState({});
+  const animationFrameIdRef = useRef(null);
+  const lastSentDataRef = useRef({ buttons: {}, axes: {} });
+
+  // Initialize WebSocket only once
+  if (!ws) {
+    ws = new WebSocket('ws://10.101.145.233:8765');
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected. Reconnecting...');
+      ws = null;
+      // Reconnect after a delay
+      setTimeout(() => {
+        if (!ws) {
+          ws = new WebSocket('ws://10.101.145.233:8765');
+        }
+      }, 1000);
+    };
+
+    ws.onerror = (error) => {
+      console.log('WebSocket error:', error);
+    };
+  }
 
   useEffect(() => {
-    const handleGamepadConnected = (event) => {
-      console.log('A gamepad connected:', event.gamepad);
-      updateGamepadList();
-    };
-
-    const handleGamepadDisconnected = (event) => {
-      console.log('A gamepad disconnected:', event.gamepad);
-      updateGamepadList();
-    };
-
-    const updateGamepadList = () => {
-      const gamepadsArray = navigator.getGamepads ? navigator.getGamepads() : [];
-      setGamepads(gamepadsArray);
-    };
-
-    window.addEventListener('gamepadconnected', handleGamepadConnected);
-    window.addEventListener('gamepaddisconnected', handleGamepadDisconnected);
-
-    // Start the gamepad polling loop
-    let animationFrameId;
-
     const pollGamepads = () => {
-      updateGamepadList();
+      const gamepadsArray = navigator.getGamepads
+        ? navigator.getGamepads()
+        : [];
 
       // Update button and axis states
       const newButtonStates = {};
       const newAxisStates = {};
 
-      gamepads.forEach((gamepad) => {
+      gamepadsArray.forEach((gamepad) => {
         if (gamepad) {
           gamepad.buttons.forEach((button, index) => {
             newButtonStates[`button${index}`] = button.pressed;
@@ -47,20 +55,39 @@ const GamepadComponent = () => {
         }
       });
 
-      setButtonStates(newButtonStates);
-      setAxisStates(newAxisStates);
+      // Update state only if it has changed
+      if (
+        JSON.stringify(newButtonStates) !== JSON.stringify(buttonStates)
+      ) {
+        setButtonStates(newButtonStates);
+      }
+      if (JSON.stringify(newAxisStates) !== JSON.stringify(axisStates)) {
+        setAxisStates(newAxisStates);
+      }
 
-      animationFrameId = requestAnimationFrame(pollGamepads);
+      // Send data over WebSocket only if it has changed
+      const dataToSend = { buttons: newButtonStates, axes: newAxisStates };
+      if (
+        JSON.stringify(dataToSend) !==
+        JSON.stringify(lastSentDataRef.current)
+      ) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(dataToSend));
+          lastSentDataRef.current = dataToSend;
+        }
+      }
+
+      animationFrameIdRef.current = requestAnimationFrame(pollGamepads);
     };
 
     pollGamepads();
 
     return () => {
-      window.removeEventListener('gamepadconnected', handleGamepadConnected);
-      window.removeEventListener('gamepaddisconnected', handleGamepadDisconnected);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
     };
-  }, [gamepads]);
+  }, [buttonStates, axisStates]);
 
   // Helper functions to get SVG element styles based on button/axis states
   const getButtonFill = (buttonName) => {
@@ -73,29 +100,18 @@ const GamepadComponent = () => {
     return { x, y };
   };
 
-  return (
-    <div className="mt-8 text-white">
-      <h2 className="text-2xl font-bold mb-4 text-white text-center">Controller Status</h2>
-      {gamepads.length > 0 && Array.from(gamepads).some((g) => g) ? (
-        Array.from(gamepads).map((gamepad) => {
-          if (gamepad) {
-            // Get positions for sticks
-            const leftStickPos = getAxisPosition('axis0', 'axis1', 113, 160, 20);
-            const rightStickPos = getAxisPosition('axis2', 'axis3', 278, 238, 20);
+  // Memoize the rendered gamepad to prevent unnecessary re-renders
+  const renderedGamepad = React.useMemo(() => {
+    // Get positions for sticks
+    const leftStickPos = getAxisPosition('axis0', 'axis1', 113, 160, 20);
+    const rightStickPos = getAxisPosition('axis2', 'axis3', 278, 238, 20);
 
-            return (
-              <div key={gamepad.index} className="mb-6 rounded text-white">
-                {/*<p>*/}
-                {/*  <strong>ID:</strong> {gamepad.id}*/}
-                {/*</p>*/}
-                {/*<p>*/}
-                {/*  <strong>Index:</strong> {gamepad.index}*/}
-                {/*</p>*/}
-
-                {/* SVG Controller */}
-                <div className="mt-4">
-                  <svg
-                    width="450"
+    return (
+      <div className="mb-4 rounded text-white">
+        {/* SVG Controller */}
+        <div className="mt-4 flex justify-center items-center">
+            <svg
+                    width="50%"
                     viewBox="0 0 441 383"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -347,42 +363,22 @@ const GamepadComponent = () => {
                     </g>
                   </svg>
                 </div>
+      </div>
+    );
+  }, [buttonStates, axisStates]);
 
-                {/* Continue displaying stats */}
-                {/*<div className="mt-4">*/}
-                {/*  <div>*/}
-                {/*    <strong>Buttons:</strong>*/}
-                {/*    <div className="flex flex-wrap">*/}
-                {/*      {gamepad.buttons.map((button, i) => (*/}
-                {/*        <div key={i} className="mr-2">*/}
-                {/*          <span>Button {i}: </span>*/}
-                {/*          <span>{button.pressed ? 'Pressed' : 'Released'}</span>*/}
-                {/*          <span> ({button.value.toFixed(2)})</span>*/}
-                {/*        </div>*/}
-                {/*      ))}*/}
-                {/*    </div>*/}
-                {/*  </div>*/}
-                {/*  <div className="mt-2">*/}
-                {/*    <strong>Axes:</strong>*/}
-                {/*    <div className="flex flex-wrap">*/}
-                {/*      {gamepad.axes.map((axis, i) => (*/}
-                {/*        <div key={i} className="mr-2">*/}
-                {/*          <span>*/}
-                {/*            Axis {i}: {axis.toFixed(2)}*/}
-                {/*          </span>*/}
-                {/*        </div>*/}
-                {/*      ))}*/}
-                {/*    </div>*/}
-                {/*  </div>*/}
-                {/*</div>*/}
-              </div>
-            );
-          } else {
-            return null;
-          }
-        })
+  return (
+    <div className="mt-4 text-white text-center">
+      <h2 className="text-2xl font-bold mb-4 text-white text-center">
+        Controller Status
+      </h2>
+      {navigator.getGamepads && Array.from(navigator.getGamepads()).some((g) => g) ? (
+        renderedGamepad
       ) : (
-        <p>No gamepads connected. Connect a gamepad, then press any input to see outputs.</p>
+        <p>
+          No gamepads connected. Connect a gamepad, then press any input to see
+          outputs.
+        </p>
       )}
     </div>
   );
