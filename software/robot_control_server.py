@@ -35,6 +35,7 @@ servo_max = 600  # Max pulse length out of 4096
 
 pan1 = 0
 tilt1 = 0
+tilt_angle = 0
 
 # Function to convert angle to pulse width
 def angle_to_pulse(angle):
@@ -137,6 +138,7 @@ def move_robot(linear_velocity, angular_velocity):
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
+    #needs to be changed
     scaled_left_speed = scale_speed(left_wheel_speed)
     scaled_right_speed = scale_speed(right_wheel_speed)
 
@@ -173,14 +175,18 @@ def convert_to_angle(value):
 def update_angle():
     """Loop to continuously update the angle based on the input value."""
     while True:
-        global pan1
-        global tilt1
+        global pan1, tilt1, tilt_angle
 
         #print(pan1, '-', tilt1)
 
+        if tilt1 < 0:
+            tilt_angle -= 0.5
+        else:
+            tilt_angle += 0.5
+        
         # Clamp the input value to the range [-1, 1]
         pane = max(-1, min(1, -pan1))
-        tilte = max(-0.5, min(0.51, tilt1))
+        tilte = max(-0.5, min(0.51, tilt_angle))
         # Calculate the current angle based on the value
 
         angle1 = convert_to_angle(pane)
@@ -268,9 +274,9 @@ movement_thread = threading.Thread(target=check_movement_timeout)
 movement_thread.daemon = True
 movement_thread.start()
 
-test = threading.Thread(target=update_angle)
-test.daemon = True
-test.start()
+angle_thread = threading.Thread(target=update_angle)
+angle_thread.daemon = True
+angle_thread.start()
 
 
 # Start the WebSocket server
