@@ -48,7 +48,7 @@ const WebRTCComponent = () => {
         }).then(() => {
             console.log("Requesting offer")
             const offer = pcRef.current.localDescription;
-            return fetch('http://192.168.1.159/:8080/offer', { //change this to the actual server later
+            return fetch('http://192.168.1.159:8080/offer', { //change this to the actual server later
                 body: JSON.stringify({
                     sdp: offer.sdp,
                     type: offer.type,
