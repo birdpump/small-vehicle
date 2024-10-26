@@ -180,9 +180,9 @@ def update_angle():
         #print(pan1, '-', tilt1)
 
         if tilt1 < -0.05:
-            tilt_angle -= abs(tilt1)/3.0
+            tilt_angle -= abs(tilt1)/5
         elif tilt1 > 0.05:
-            tilt_angle += abs(tilt1)/3.0
+            tilt_angle += abs(tilt1)/5
         
 
         if pan1 > -0.3 and pan1 < 0.3:
