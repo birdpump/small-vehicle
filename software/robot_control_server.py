@@ -185,7 +185,7 @@ def update_angle():
             tilt_angle += abs(tilt1)/3.0
         
 
-        if pan1 > -0.1 or pan1 < 0.1:
+        if pan1 > -0.1 and pan1 < 0.1:
             pan1 = 0
 
         # Clamp the input value to the range [-1, 1]
