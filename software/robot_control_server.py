@@ -184,6 +184,10 @@ def update_angle():
         elif tilt1 > 0.05:
             tilt_angle += abs(tilt1)/3.0
         
+
+        if pan1 > -0.1 or pan1 < 0.1:
+            pan1 = 0
+
         # Clamp the input value to the range [-1, 1]
         pane = max(-1, min(1, -pan1))
         tilte = max(-0.5, min(0.51, tilt_angle))
@@ -191,7 +195,6 @@ def update_angle():
 
         angle1 = convert_to_angle(pane)
         angle2 = convert_to_angle(tilte)
-
 
         pulse_width_pan = angle_to_pulse(angle1)
         pulse_width_tilt = angle_to_pulse(angle2)
