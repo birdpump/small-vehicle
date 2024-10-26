@@ -23,8 +23,6 @@ status = 2  # Default to standby
 movement_detected = False
 last_movement_time = time.time()
 
-value = 0
-
 import time
 import Adafruit_PCA9685
 
@@ -34,6 +32,9 @@ pwm = Adafruit_PCA9685.PCA9685(busnum=1)
 # Configure min and max servo pulse lengths
 servo_min = 150  # Min pulse length out of 4096
 servo_max = 600  # Max pulse length out of 4096
+
+pan1 = 0
+tilt1 = 0
 
 # Function to convert angle to pulse width
 def angle_to_pulse(angle):
@@ -126,11 +127,11 @@ def drive_wheels(left_speed, right_speed):
         MotorRight.stop(0)
     else:
         MotorRight.forward(right_speed)
-        
+
 
 def move_robot(linear_velocity, angular_velocity):
     global left_wheel_speed, right_wheel_speed
-    
+
     wheelbase = 0.5
 
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
@@ -170,60 +171,54 @@ def convert_to_angle(value):
 
 
 def update_angle():
-    global value
     """Loop to continuously update the angle based on the input value."""
     while True:
-        print(value)
+        global pan1
+        global tilt1
+
+        #print(pan1, '-', tilt1)
+
         # Clamp the input value to the range [-1, 1]
-        valuee = max(-1, min(1, value))
-        
+        pane = max(-1, min(1, -pan1))
+        tilte = max(-0.5, min(0.51, tilt1))
         # Calculate the current angle based on the value
-        angle = convert_to_angle(valuee)
-        
-        # Print or set the angle to the servo
-        print(f'Setting angle: {angle:.2f} degrees')
-        
-        # Calculate the increment based on the proximity to 1 or -1
-        increment = abs(valuee)  # This will be between 0 and 1
-        
-        # Use a multiplier to adjust the increment size
-        multiplier = 10  # Adjust this value for faster/slower increments
-        angle_increment = increment * multiplier
-        
-        # Simulate the adjustment of the value (this is where you would get your actual input)
-        if valuee < 1:
-            valuee += angle_increment / 100  # Increase towards 1
-        else:
-            valuee -= angle_increment / 100  # Decrease towards -1
-        
-        # Pause for a moment to visualize the angle change
+
+        angle1 = convert_to_angle(pane)
+        angle2 = convert_to_angle(tilte)
 
 
-        pulse_width = angle_to_pulse(valuee)
-        pwm.set_pwm(0, 0, pulse_width)
-        time.sleep(0.5)
+        pulse_width_pan = angle_to_pulse(angle1)
+        pulse_width_tilt = angle_to_pulse(angle2)
 
-        
-    
+        print(pulse_width_tilt, ' - ', pulse_width_pan)
+        pwm.set_pwm(0, 0, pulse_width_pan)
+        pwm.set_pwm(1, 0, pulse_width_tilt)
+        time.sleep(0.1)
+
+
+
 
 async def handle_connection(websocket, path):
     global value
+
+    global pan1
+    global tilt1
     print("Client connected")
     try:
         async for message in websocket:
             data = json.loads(message)
-            print(data)
+
             buttons = data.get('buttons', {})
             axes = data.get('axes', {})
-        
+
             angle = axes.get('axis2', 0)
             linear = axes.get('axis3', 0)
 
             pan = axes.get('axis0', 0)
             tilt = axes.get('axis1', 0)
-        
+
             deadzone = 0.1
-        
+
             if abs(angle) < deadzone:
                 angle = 0
             if abs(linear) < deadzone:
@@ -234,9 +229,12 @@ async def handle_connection(websocket, path):
             if abs(tilt) < deadzone:
                 tilt = 0
 
-            # move_camera(pan, tilt)
-            #print(pan)
-            #value = pan
+
+            # update_angle(pan, tilt)
+            pan1 = pan
+            tilt1 = tilt
+
+
             get_joystick_input(angle, linear)
 
     except websockets.ConnectionClosed:
@@ -252,7 +250,7 @@ def check_movement_timeout():
     while True:
         if movement_detected:
             status = 1
-            
+
         else:
             if time.time() - last_movement_time > 1:
                 movement_detected = False
