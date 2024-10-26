@@ -179,9 +179,9 @@ def update_angle():
 
         #print(pan1, '-', tilt1)
 
-        if tilt1 < 0:
+        if tilt1 < -0.5:
             tilt_angle -= 0.5
-        else:
+        elif tilt1 > 0.5:
             tilt_angle += 0.5
         
         # Clamp the input value to the range [-1, 1]
