@@ -174,24 +174,27 @@ def convert_to_angle(value):
 
 
 def update_angle():
-    """Loop to continuously update the camera angle directly based on joystick input."""
+    """Continuously update the servo angles based on joystick input with angle clamping."""
     while True:
         global pan1, tilt1
 
-        # Directly map the joystick input to the servo angles
-        angle_pan = convert_to_angle(pan1)
-        angle_tilt = convert_to_angle(tilt1)
+        # Direct mapping of joystick input to servo angles
+        angle_pan = clamp_angle(convert_to_angle(pan1))
+        angle_tilt = clamp_angle(convert_to_angle(tilt1))
 
-        # Convert angle to pulse and set PWM for pan and tilt servos
+        # Convert angles to pulses and send to servos
         pulse_width_pan = angle_to_pulse(angle_pan)
         pulse_width_tilt = angle_to_pulse(angle_tilt)
 
         pwm.set_pwm(0, 0, pulse_width_pan)
         pwm.set_pwm(1, 0, pulse_width_tilt)
 
-        # Small delay to avoid excessive CPU usage
+        # Small delay to prevent CPU overuse
         time.sleep(0.1)
 
+
+def clamp_angle(value, min_angle=0, max_angle=180):
+    return max(min_angle, min(value, max_angle))
 
 
 async def handle_connection(websocket, path):
@@ -205,7 +208,6 @@ async def handle_connection(websocket, path):
             buttons = data.get('buttons', {})
             axes = data.get('axes', {})
 
-            # Retrieve axis values for joystick direction
             angle = axes.get('axis2', 0)
             linear = axes.get('axis3', 0)
 
@@ -214,7 +216,7 @@ async def handle_connection(websocket, path):
 
             deadzone = 0.1
 
-            # Apply deadzone to avoid any small joystick fluctuations
+            # Apply deadzone and reset to zero if within the range
             if abs(angle) < deadzone:
                 angle = 0
             if abs(linear) < deadzone:
@@ -224,15 +226,18 @@ async def handle_connection(websocket, path):
             if abs(tilt) < deadzone:
                 tilt = 0
 
-            # Directly assign pan and tilt values, respecting deadzone
+            # Set pan and tilt directly to joystick input values, with deadzone applied
             pan1 = pan
             tilt1 = tilt
 
-            # Update robot movement directly with angle and linear values
+            # Drive the robot based on joystick input
             get_joystick_input(angle, linear)
 
     except websockets.ConnectionClosed:
         print("Client disconnected")
+        # Reset pan and tilt on disconnect to prevent lingering values
+        pan1 = 0
+        tilt1 = 0
 
 async def main():
     async with websockets.serve(handle_connection, "0.0.0.0", 8765):
