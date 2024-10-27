@@ -172,51 +172,43 @@ def convert_to_angle(value):
     angle = 90 + (value * 90)
     return angle
 
+def smooth_input(new_value, previous_values, max_samples=5):
+    previous_values.append(new_value)
+    if len(previous_values) > max_samples:
+        previous_values.pop(0)  # Remove the oldest value if we exceed max samples
+    return sum(previous_values) / len(previous_values)
 
 def update_angle():
-    """Loop to continuously update the angle based on the input value."""
+    """Loop to continuously update the angle based on the smoothed input value."""
     while True:
         global pan1, tilt1, tilt_angle, pan_angle
 
-        #print(pan1, '-', tilt1)
+        # Easing factor to create smoother movements
+        easing_factor = 0.1
 
-        # if tilt1 < -0.05 and tilt_angle >= -1:
-        #     tilt_angle -= abs(tilt1)/5
-        # elif tilt1 > 0.05  and tilt_angle <= 1:
-        #     tilt_angle += abs(tilt1)/5
-        
-        # if pan1 < -0.05 and pan_angle >= -1:
-        #     pan_angle -= abs(pan1)/5
-        # elif pan1 > 0.05  and pan_angle <= 1:
-        #     pan_angle += abs(pan1)/5
-        
-        # if pan1 > -0.3 and pan1 < 0.3:
-        #     pan1 = 0
+        # Gradually move toward the target pan and tilt angles
+        pan_angle += easing_factor * (convert_to_angle(pan1) - pan_angle)
+        tilt_angle += easing_factor * (convert_to_angle(tilt1) - tilt_angle)
 
-        # Clamp the input value to the range [-1, 1]
-        pane = max(-1, min(1, -pan1))
-        tilte = max(-0.5, min(0.51, tilt1))
-        # Calculate the current angle based on the value
+        # Convert angles to pulse widths and set PWM
+        pulse_width_pan = angle_to_pulse(pan_angle)
+        pulse_width_tilt = angle_to_pulse(tilt_angle)
 
-        angle1 = convert_to_angle(pane)
-        angle2 = convert_to_angle(tilte)
-
-        pulse_width_pan = angle_to_pulse(angle1)
-        pulse_width_tilt = angle_to_pulse(angle2)
-
-        print(pulse_width_tilt, ' - ', pulse_width_pan)
         pwm.set_pwm(0, 0, pulse_width_pan)
         pwm.set_pwm(1, 0, pulse_width_tilt)
+        
         time.sleep(0.1)
 
 
 
 
 async def handle_connection(websocket, path):
-    global value
+    global pan1, tilt1
 
-    global pan1
-    global tilt1
+    # Initialize lists to store previous values for smoothing
+    pan_values = []
+    tilt_values = []
+
     print("Client connected")
     try:
         async for message in websocket:
@@ -231,28 +223,28 @@ async def handle_connection(websocket, path):
             pan = axes.get('axis0', 0)
             tilt = axes.get('axis1', 0)
 
-            deadzone = 0.1
+            deadzone = 0.15  # Increased deadzone to avoid minor unintended movement
 
+            # Apply deadzone to avoid small joystick fluctuations
             if abs(angle) < deadzone:
                 angle = 0
             if abs(linear) < deadzone:
                 linear = 0
-
             if abs(pan) < deadzone:
                 pan = 0
             if abs(tilt) < deadzone:
                 tilt = 0
 
+            # Smooth pan and tilt values using a moving average
+            pan1 = smooth_input(pan, pan_values)
+            tilt1 = smooth_input(tilt, tilt_values)
 
-            # update_angle(pan, tilt)
-            pan1 = pan
-            tilt1 = tilt
-
-
+            # Call the function to move the robot based on angle and linear values
             get_joystick_input(angle, linear)
 
     except websockets.ConnectionClosed:
         print("Client disconnected")
+
 
 async def main():
     async with websockets.serve(handle_connection, "0.0.0.0", 8765):
