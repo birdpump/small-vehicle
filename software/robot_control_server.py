@@ -165,12 +165,7 @@ def get_joystick_input(right_x, right_y):
         movement_detected = False
 
     move_robot(linear_velocity, angular_velocity)
-import time
-last_valid_pan = 90  # Default center angle
-last_valid_tilt = 90  # Default center angle
 
-def clamp_angle(value, min_angle=0, max_angle=180):
-    return max(min_angle, min(value, max_angle))
 
 def convert_to_angle(value):
     """Convert the input value from [-1, 1] to an angle between 0 and 180 degrees."""
@@ -179,34 +174,49 @@ def convert_to_angle(value):
 
 
 def update_angle():
-    """Directly control the servo angles with clamping, deadzone, and reset handling."""
-    global last_valid_pan, last_valid_tilt
-
+    """Loop to continuously update the angle based on the input value."""
     while True:
-        # Convert joystick input to angle
-        angle_pan = clamp_angle(convert_to_angle(pan1))
-        angle_tilt = clamp_angle(convert_to_angle(tilt1))
+        global pan1, tilt1, tilt_angle, pan_angle
 
-        # Reset servos if no input detected (0 values for a set time)
-        if pan1 == 0 and tilt1 == 0:
-            angle_pan = last_valid_pan
-            angle_tilt = last_valid_tilt
-        else:
-            last_valid_pan = angle_pan
-            last_valid_tilt = angle_tilt
+        #print(pan1, '-', tilt1)
 
-        # Apply the angles to the servos
-        pwm.set_pwm(0, 0, angle_to_pulse(angle_pan))
-        pwm.set_pwm(1, 0, angle_to_pulse(angle_tilt))
+        # if tilt1 < -0.05 and tilt_angle >= -1:
+        #     tilt_angle -= abs(tilt1)/5
+        # elif tilt1 > 0.05  and tilt_angle <= 1:
+        #     tilt_angle += abs(tilt1)/5
+        
+        # if pan1 < -0.05 and pan_angle >= -1:
+        #     pan_angle -= abs(pan1)/5
+        # elif pan1 > 0.05  and pan_angle <= 1:
+        #     pan_angle += abs(pan1)/5
+        
+        # if pan1 > -0.3 and pan1 < 0.3:
+        #     pan1 = 0
 
-        # Small delay to prevent over-processing
+        # Clamp the input value to the range [-1, 1]
+        pane = max(-1, min(1, -pan1))
+        tilte = max(-0.5, min(0.51, tilt1))
+        # Calculate the current angle based on the value
+
+        angle1 = convert_to_angle(pane)
+        angle2 = convert_to_angle(tilte)
+
+        pulse_width_pan = angle_to_pulse(angle1)
+        pulse_width_tilt = angle_to_pulse(angle2)
+
+        #print(pulse_width_tilt, ' - ', pulse_width_pan)
+        pwm.set_pwm(0, 0, pulse_width_pan)
+        pwm.set_pwm(1, 0, pulse_width_tilt)
         time.sleep(0.1)
 
 
 
-async def handle_connection(websocket, path):
-    global pan1, tilt1, last_valid_pan, last_valid_tilt
 
+async def handle_connection(websocket, path):
+    global value
+
+    global pan1
+    global tilt1
     print("Client connected")
     try:
         async for message in websocket:
@@ -223,16 +233,26 @@ async def handle_connection(websocket, path):
 
             deadzone = 0.1
 
-            # Apply deadzone reset if within range
-            pan1 = pan if abs(pan) >= deadzone else 0
-            tilt1 = tilt if abs(tilt) >= deadzone else 0
+            if abs(angle) < deadzone:
+                angle = 0
+            if abs(linear) < deadzone:
+                linear = 0
 
-            # Update robot movement
+            if abs(pan) < deadzone:
+                pan = 0
+            if abs(tilt) < deadzone:
+                tilt = 0
+
+
+            # update_angle(pan, tilt)
+            pan1 = pan
+            tilt1 = tilt
+
+
             get_joystick_input(angle, linear)
 
     except websockets.ConnectionClosed:
         print("Client disconnected")
-        pan1, tilt1 = 0, 0
 
 async def main():
     async with websockets.serve(handle_connection, "0.0.0.0", 8765):
