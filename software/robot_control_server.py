@@ -204,11 +204,10 @@ def update_angle():
         pulse_width_pan = angle_to_pulse(angle1)
         pulse_width_tilt = angle_to_pulse(angle2)
 
-        #print(-pan1, " - ", tilt1)
         #print(pulse_width_tilt, ' - ', pulse_width_pan)
         pwm.set_pwm(0, 0, pulse_width_pan)
         pwm.set_pwm(1, 0, pulse_width_tilt)
-        time.sleep(0.2)
+        time.sleep(0.1)
 
 
 
@@ -234,11 +233,15 @@ async def handle_connection(websocket, path):
 
             deadzone = 0.1
 
-            ideadzone = 0.15  # Increased deadzone value
-        if abs(pan) < deadzone:
-            pan = 0
-        if abs(tilt) < deadzone:
-            tilt = 0
+            if abs(angle) < deadzone:
+                angle = 0
+            if abs(linear) < deadzone:
+                linear = 0
+
+            if abs(pan) < deadzone:
+                pan = 0
+            if abs(tilt) < deadzone:
+                tilt = 0
 
 
             # update_angle(pan, tilt)
