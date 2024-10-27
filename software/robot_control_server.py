@@ -172,42 +172,30 @@ def convert_to_angle(value):
     angle = 90 + (value * 90)
     return angle
 
-def smooth_input(new_value, previous_values, max_samples=5):
-    previous_values.append(new_value)
-    if len(previous_values) > max_samples:
-        previous_values.pop(0)  # Remove the oldest value if we exceed max samples
-    return sum(previous_values) / len(previous_values)
 
 def update_angle():
-    """Loop to continuously update the angle based on the smoothed input value."""
+    """Loop to continuously update the camera angle directly based on joystick input."""
     while True:
-        global pan1, tilt1, tilt_angle, pan_angle
+        global pan1, tilt1
 
-        # Easing factor to create smoother movements
-        easing_factor = 0.1
+        # Directly map the joystick input to the servo angles
+        angle_pan = convert_to_angle(pan1)
+        angle_tilt = convert_to_angle(tilt1)
 
-        # Gradually move toward the target pan and tilt angles
-        pan_angle += easing_factor * (convert_to_angle(pan1) - pan_angle)
-        tilt_angle += easing_factor * (convert_to_angle(tilt1) - tilt_angle)
-
-        # Convert angles to pulse widths and set PWM
-        pulse_width_pan = angle_to_pulse(pan_angle)
-        pulse_width_tilt = angle_to_pulse(tilt_angle)
+        # Convert angle to pulse and set PWM for pan and tilt servos
+        pulse_width_pan = angle_to_pulse(angle_pan)
+        pulse_width_tilt = angle_to_pulse(angle_tilt)
 
         pwm.set_pwm(0, 0, pulse_width_pan)
         pwm.set_pwm(1, 0, pulse_width_tilt)
-        
-        time.sleep(0.1)
 
+        # Small delay to avoid excessive CPU usage
+        time.sleep(0.1)
 
 
 
 async def handle_connection(websocket, path):
     global pan1, tilt1
-
-    # Initialize lists to store previous values for smoothing
-    pan_values = []
-    tilt_values = []
 
     print("Client connected")
     try:
@@ -217,15 +205,16 @@ async def handle_connection(websocket, path):
             buttons = data.get('buttons', {})
             axes = data.get('axes', {})
 
+            # Retrieve axis values for joystick direction
             angle = axes.get('axis2', 0)
             linear = axes.get('axis3', 0)
 
             pan = axes.get('axis0', 0)
             tilt = axes.get('axis1', 0)
 
-            deadzone = 0.15  # Increased deadzone to avoid minor unintended movement
+            deadzone = 0.1
 
-            # Apply deadzone to avoid small joystick fluctuations
+            # Apply deadzone to avoid any small joystick fluctuations
             if abs(angle) < deadzone:
                 angle = 0
             if abs(linear) < deadzone:
@@ -235,16 +224,15 @@ async def handle_connection(websocket, path):
             if abs(tilt) < deadzone:
                 tilt = 0
 
-            # Smooth pan and tilt values using a moving average
-            pan1 = smooth_input(pan, pan_values)
-            tilt1 = smooth_input(tilt, tilt_values)
+            # Directly assign pan and tilt values, respecting deadzone
+            pan1 = pan
+            tilt1 = tilt
 
-            # Call the function to move the robot based on angle and linear values
+            # Update robot movement directly with angle and linear values
             get_joystick_input(angle, linear)
 
     except websockets.ConnectionClosed:
         print("Client disconnected")
-
 
 async def main():
     async with websockets.serve(handle_connection, "0.0.0.0", 8765):
