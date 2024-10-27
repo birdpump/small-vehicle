@@ -36,6 +36,7 @@ servo_max = 600  # Max pulse length out of 4096
 pan1 = 0
 tilt1 = 0
 tilt_angle = 0
+pan_angle = 0
 
 # Function to convert angle to pulse width
 def angle_to_pulse(angle):
@@ -175,7 +176,7 @@ def convert_to_angle(value):
 def update_angle():
     """Loop to continuously update the angle based on the input value."""
     while True:
-        global pan1, tilt1, tilt_angle
+        global pan1, tilt1, tilt_angle, pan_angle
 
         #print(pan1, '-', tilt1)
 
@@ -184,9 +185,13 @@ def update_angle():
         elif tilt1 > 0.05  and tilt_angle <= 1:
             tilt_angle += abs(tilt1)/5
         
-
-        if pan1 > -0.3 and pan1 < 0.3:
-            pan1 = 0
+        if pan1 < -0.05 and pan_angle >= -1:
+            pan_angle -= abs(pan1)/5
+        elif pan1 > 0.05  and pan_angle <= 1:
+            pan_angle += abs(pan1)/5
+        
+        # if pan1 > -0.3 and pan1 < 0.3:
+        #     pan1 = 0
 
         # Clamp the input value to the range [-1, 1]
         pane = max(-1, min(1, -pan1))
