@@ -182,7 +182,7 @@ def convert_to_angle(value):
 def update_angle():
     """Loop to continuously update the angle based on the input value."""
     while True:
-        global pan1, tilt1, tilt_angle, pan_angle
+        global pan1, tilt1, tilt_angle, pan_angle, lockP1, lockT1
 
         #print(pan1, '-', tilt1)
 
@@ -213,7 +213,7 @@ def update_angle():
         if (not lockP1):
             pwm.set_pwm(0, 0, pulse_width_pan)
         if (not lockT1):
-            pwm.set_pwm(4, 0, pulse_width_tilt)
+            pwm.set_pwm(8, 0, pulse_width_tilt)
         time.sleep(0.1)
 
 
@@ -224,8 +224,8 @@ async def handle_connection(websocket, path):
 
     global pan1
     global tilt1
-    global lockT
-    global lockP
+    global lockT1
+    global lockP1
     print("Client connected")
     try:
         async for message in websocket:
