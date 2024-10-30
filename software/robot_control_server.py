@@ -37,7 +37,8 @@ pan1 = 0
 tilt1 = 0
 tilt_angle = 0
 pan_angle = 0
-lock1 = 0
+lockT1 = 0
+lockP1 = 0
 
 # Function to convert angle to pulse width
 def angle_to_pulse(angle):
@@ -200,7 +201,7 @@ def update_angle():
 
         # Clamp the input value to the range [-1, 1]
         pane = max(-1, min(1, -pan1))
-        tilte = max(-0.5, min(0.51, tilt1+0.2))
+        tilte = max(-0.5, min(0.51, tilt1+0.15))
         # Calculate the current angle based on the value
 
         angle1 = convert_to_angle(pane)
@@ -209,20 +210,22 @@ def update_angle():
         pulse_width_pan = angle_to_pulse(angle1)
         pulse_width_tilt = angle_to_pulse(angle2)
         #print(pulse_width_tilt, ' - ', pulse_width_pan)
-        if (not lock1):
+        if (not lockP1):
             pwm.set_pwm(0, 0, pulse_width_pan)
-        pwm.set_pwm(1, 0, pulse_width_tilt)
+        if (not lockT1):
+            pwm.set_pwm(4, 0, pulse_width_tilt)
         time.sleep(0.1)
 
 
 
 
 async def handle_connection(websocket, path):
-    global value
+    global valuep
 
     global pan1
     global tilt1
-    global lock1
+    global lockT
+    global lockP
     print("Client connected")
     try:
         async for message in websocket:
@@ -230,7 +233,8 @@ async def handle_connection(websocket, path):
 
             buttons = data.get('buttons', {})
 
-            lock = buttons.get('button4',{})
+            lockP = buttons.get('button4',{})
+            lockT = buttons.get('button5',{})
             
             axes = data.get('axes', {})
 
@@ -257,7 +261,8 @@ async def handle_connection(websocket, path):
 
             pan1 = pan
             tilt1 = tilt
-            lock1 = lock
+            lockT1 = lockT
+            lockP1 = lockP
 
 
             get_joystick_input(angle, linear)
