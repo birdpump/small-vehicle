@@ -199,6 +199,7 @@ def update_angle():
         #     pan1 = 0
 
         # Clamp the input value to the range [-1, 1]
+        print(-pan1)
         pane = max(-1, min(1, -pan1))
         tilte = max(-0.5, min(0.51, tilt1))
         # Calculate the current angle based on the value
@@ -207,9 +208,8 @@ def update_angle():
         angle2 = convert_to_angle(tilte)
 
         if (not lock1):
-            pulse_width_tilt = angle_to_pulse(angle2)
-        pulse_width_pan = angle_to_pulse(angle1)
-
+            pulse_width_pan = angle_to_pulse(angle1)
+        pulse_width_tilt = angle_to_pulse(angle2)
         #print(pulse_width_tilt, ' - ', pulse_width_pan)
         pwm.set_pwm(0, 0, pulse_width_pan)
         pwm.set_pwm(1, 0, pulse_width_tilt)
