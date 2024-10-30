@@ -207,8 +207,8 @@ def update_angle():
         angle2 = convert_to_angle(tilte)
 
         if (not lock1):
-            #pulse_width_pan = angle_to_pulse(angle1)
             pulse_width_tilt = angle_to_pulse(angle2)
+        pulse_width_pan = angle_to_pulse(angle1)
 
         #print(pulse_width_tilt, ' - ', pulse_width_pan)
         pwm.set_pwm(0, 0, pulse_width_pan)
