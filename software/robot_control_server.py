@@ -204,7 +204,7 @@ def update_angle():
         angle1 = convert_to_angle(pane)
         angle2 = convert_to_angle(tilte)
 
-        if ()
+        #if ()
         pulse_width_pan = angle_to_pulse(angle1)
         pulse_width_tilt = angle_to_pulse(angle2)
 
