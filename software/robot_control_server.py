@@ -229,7 +229,7 @@ async def handle_connection(websocket, path):
             buttons = data.get('buttons', {})
 
             #lock = buttons.get('',{})
-            print(buttons)
+            #print(buttons)
             axes = data.get('axes', {})
 
             angle = axes.get('axis2', 0)
