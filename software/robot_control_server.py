@@ -140,7 +140,7 @@ def move_robot(linear_velocity, angular_velocity):
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
-    print(linear_velocity, " ", angular_velocity)
+    #print(linear_velocity, " ", angular_velocity)
     #left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     #right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
@@ -207,7 +207,7 @@ def update_angle():
         angle2 = convert_to_angle(tilte)
 
         if (not lock1):
-            pulse_width_pan = angle_to_pulse(angle1)
+            #pulse_width_pan = angle_to_pulse(angle1)
             pulse_width_tilt = angle_to_pulse(angle2)
 
         #print(pulse_width_tilt, ' - ', pulse_width_pan)
