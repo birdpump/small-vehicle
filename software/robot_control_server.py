@@ -139,6 +139,9 @@ def move_robot(linear_velocity, angular_velocity):
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
+    #left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
+    #right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
+
     #needs to be changed
     scaled_left_speed = scale_speed(left_wheel_speed)
     scaled_right_speed = scale_speed(right_wheel_speed)
@@ -201,6 +204,7 @@ def update_angle():
         angle1 = convert_to_angle(pane)
         angle2 = convert_to_angle(tilte)
 
+        if ()
         pulse_width_pan = angle_to_pulse(angle1)
         pulse_width_tilt = angle_to_pulse(angle2)
 
@@ -223,6 +227,9 @@ async def handle_connection(websocket, path):
             data = json.loads(message)
 
             buttons = data.get('buttons', {})
+
+            #lock = buttons.get('',{})
+            print(buttons)
             axes = data.get('axes', {})
 
             angle = axes.get('axis2', 0)
