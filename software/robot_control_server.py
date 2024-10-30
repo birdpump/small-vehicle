@@ -199,7 +199,6 @@ def update_angle():
         #     pan1 = 0
 
         # Clamp the input value to the range [-1, 1]
-        print(-pan1)
         pane = max(-1, min(1, -pan1))
         tilte = max(-0.5, min(0.51, tilt1-0.2))
         # Calculate the current angle based on the value
