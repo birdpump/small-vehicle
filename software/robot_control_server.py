@@ -214,7 +214,7 @@ def update_angle():
             pwm.set_pwm(0, 0, pulse_width_pan)
         if (not lockT1):
             pwm.set_pwm(8, 0, pulse_width_tilt)
-        time.sleep(0.1)
+        time.sleep(0.3)
 
 
 
