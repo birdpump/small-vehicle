@@ -146,9 +146,9 @@ def move_robot(linear_velocity, angular_velocity):
     #reverse wheel directions for sharper turns if angular_velocity is high
     if angular_velocity > threshold:
         left_wheel_speed = -abs(left_wheel_speed)  #reverse left wheel
-        right_wheel_speed = abs(left_wheel_speed)*(threshold*angular_velocity)  #keep right wheel forward
+        right_wheel_speed = abs(right_wheel_speed)*(threshold*angular_velocity)  #keep right wheel forward
     elif angular_velocity < -threshold:
-        left_wheel_speed = abs(right_wheel_speed)*(threshold*angular_velocity)  #keep left wheel forward
+        left_wheel_speed = abs(left_wheel_speed)*(threshold*angular_velocity)  #keep left wheel forward
         right_wheel_speed = -abs(right_wheel_speed)  #reverse right wheel
 
     #scale the speeds
