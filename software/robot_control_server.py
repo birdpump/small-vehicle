@@ -137,7 +137,7 @@ def move_robot(linear_velocity, angular_velocity):
     global left_wheel_speed, right_wheel_speed
 
     wheelbase = 0.5
-    threshold = 0.5  # Adjust threshold as needed for desired turning sensitivity
+    threshold = 1  # Adjust threshold as needed for desired turning sensitivity
 
     # Normal differential drive calculations
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
