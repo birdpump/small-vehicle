@@ -137,19 +137,27 @@ def move_robot(linear_velocity, angular_velocity):
     global left_wheel_speed, right_wheel_speed
 
     wheelbase = 0.5
+    threshold = 0.5  # Adjust threshold as needed for desired turning sensitivity
 
+    # Normal differential drive calculations
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
-    #print(linear_velocity, " ", angular_velocity)
-    #left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
-    #right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
+    # Reverse wheel directions for sharper turns if angular_velocity is high
+    if angular_velocity > threshold:
+        left_wheel_speed = -abs(left_wheel_speed)  # Reverse left wheel
+        right_wheel_speed = abs(right_wheel_speed)  # Keep right wheel forward
+    elif angular_velocity < -threshold:
+        left_wheel_speed = abs(left_wheel_speed)  # Keep left wheel forward
+        right_wheel_speed = -abs(right_wheel_speed)  # Reverse right wheel
 
-    #needs to be changed
+    # Scale the speeds
     scaled_left_speed = scale_speed(left_wheel_speed)
     scaled_right_speed = scale_speed(right_wheel_speed)
 
+    # Drive the wheels
     drive_wheels(scaled_left_speed, scaled_right_speed)
+
 
 
 def get_joystick_input(right_x, right_y):
