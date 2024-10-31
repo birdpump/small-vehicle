@@ -12,7 +12,7 @@ const GamepadComponent = () => {
 
   // Initialize WebSocket only once
   if (!ws) {
-    ws = new WebSocket('ws://192.168.1.159:8765');
+    ws = new WebSocket('ws://10.101.145.233:8765');
 
     ws.onopen = () => {
       console.log('WebSocket connected');
@@ -24,7 +24,7 @@ const GamepadComponent = () => {
       // Reconnect after a delay
       setTimeout(() => {
         if (!ws) {
-          ws = new WebSocket('ws://192.168.1.159:8765');
+          ws = new WebSocket('ws://10.101.145.233:8765');
         }
       }, 1000);
     };
