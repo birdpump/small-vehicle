@@ -143,10 +143,6 @@ def move_robot(linear_velocity, angular_velocity):
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
-    #reverse wheel directions for sharper turns if angular_velocity is high
-    print(linear_velocity, " ", angular_velocity)
-    print(left_wheel_speed, " ", right_wheel_speed)
-
     #scale the speeds
     scaled_left_speed = scale_speed(left_wheel_speed)
     scaled_right_speed = scale_speed(right_wheel_speed)
