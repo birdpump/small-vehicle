@@ -136,27 +136,29 @@ def drive_wheels(left_speed, right_speed):
 def move_robot(linear_velocity, angular_velocity):
     global left_wheel_speed, right_wheel_speed
 
-    wheelbase = 0.5
-    threshold = 1  #threshold for turning sensitivity
+    wheelbase = 0.5  # width between the wheels
+    threshold = 0.5  # adjust this threshold for how sensitive you want the turning
 
-    #normal differential drive calculations
+    # normal differential drive calculations
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
-    #reverse wheel directions for sharper turns if angular_velocity is high
-    if angular_velocity > threshold:
-        left_wheel_speed = -abs(left_wheel_speed)  #reverse left wheel
-        right_wheel_speed = abs(right_wheel_speed)  #keep right wheel forward
-    elif angular_velocity < -threshold:
-        left_wheel_speed = abs(left_wheel_speed)  #keep left wheel forward
-        right_wheel_speed = -abs(right_wheel_speed)  #reverse right wheel
+    # determine the turning behavior based on angular_velocity
+    if abs(angular_velocity) > threshold:
+        if angular_velocity > 0:  # turn right
+            left_wheel_speed = max(0, left_wheel_speed)  # stop left wheel
+            right_wheel_speed = -abs(right_wheel_speed)  # reverse right wheel for sharper turn
+        else:  # turn left
+            left_wheel_speed = -abs(left_wheel_speed)  # reverse left wheel for sharper turn
+            right_wheel_speed = max(0, right_wheel_speed)  # stop right wheel
 
-    #scale the speeds
+    # scale the speeds
     scaled_left_speed = scale_speed(left_wheel_speed)
     scaled_right_speed = scale_speed(right_wheel_speed)
 
-    #drive the wheels
+    # drive the wheels
     drive_wheels(scaled_left_speed, scaled_right_speed)
+
 
 
 
@@ -224,7 +226,7 @@ def update_angle():
         if (not lockT1):
             pwm.set_pwm(1, 0, pulse_width_tilt)
 
-        time.sleep(0.05)
+        time.sleep(0.01)
 
 
 
