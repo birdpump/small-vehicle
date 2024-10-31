@@ -137,25 +137,25 @@ def move_robot(linear_velocity, angular_velocity):
     global left_wheel_speed, right_wheel_speed
 
     wheelbase = 0.5
-    threshold = 1  # Adjust threshold as needed for desired turning sensitivity
+    threshold = 1  #threshold for turning sensitivity
 
-    # Normal differential drive calculations
+    #normal differential drive calculations
     left_wheel_speed = linear_velocity - (angular_velocity * wheelbase / 2.0)
     right_wheel_speed = linear_velocity + (angular_velocity * wheelbase / 2.0)
 
-    # Reverse wheel directions for sharper turns if angular_velocity is high
+    #reverse wheel directions for sharper turns if angular_velocity is high
     if angular_velocity > threshold:
-        left_wheel_speed = -abs(left_wheel_speed)  # Reverse left wheel
-        right_wheel_speed = abs(right_wheel_speed)  # Keep right wheel forward
+        left_wheel_speed = -abs(left_wheel_speed)  #reverse left wheel
+        right_wheel_speed = abs(right_wheel_speed)  #keep right wheel forward
     elif angular_velocity < -threshold:
-        left_wheel_speed = abs(left_wheel_speed)  # Keep left wheel forward
-        right_wheel_speed = -abs(right_wheel_speed)  # Reverse right wheel
+        left_wheel_speed = abs(left_wheel_speed)  #keep left wheel forward
+        right_wheel_speed = -abs(right_wheel_speed)  #reverse right wheel
 
-    # Scale the speeds
+    #scale the speeds
     scaled_left_speed = scale_speed(left_wheel_speed)
     scaled_right_speed = scale_speed(right_wheel_speed)
 
-    # Drive the wheels
+    #drive the wheels
     drive_wheels(scaled_left_speed, scaled_right_speed)
 
 
@@ -192,8 +192,7 @@ def update_angle():
     while True:
         global pan1, tilt1, tilt_angle, pan_angle, lockP1, lockT1
 
-        #print(pan1, '-', tilt1)
-
+        #intead of setting the camera rotation directly to joystick, this uses an offset that can be added/subtracted to based on joystick position
         # if tilt1 < -0.05 and tilt_angle >= -1:
         #     tilt_angle -= abs(tilt1)/5
         # elif tilt1 > 0.05  and tilt_angle <= 1:
@@ -207,22 +206,24 @@ def update_angle():
         # if pan1 > -0.3 and pan1 < 0.3:
         #     pan1 = 0
 
-        # Clamp the input value to the range [-1, 1]
+
+        #clamp the input value to the range [-1, 1]
         pane = max(-1, min(1, -pan1))
         tilte = max(-0.5, min(0.51, tilt1+0.15))
-        # Calculate the current angle based on the value
+        #calculate the current angle based on the value
 
         angle1 = convert_to_angle(pane)
         angle2 = convert_to_angle(tilte)
 
         pulse_width_pan = angle_to_pulse(angle1)
         pulse_width_tilt = angle_to_pulse(angle2)
-        #print(pulse_width_tilt, ' - ', pulse_width_pan)
+
+        #button lock axes when holding
         if (not lockP1):
             pwm.set_pwm(0, 0, pulse_width_pan)
         if (not lockT1):
             pwm.set_pwm(1, 0, pulse_width_tilt)
-        #print(pane, " ", tilte)
+
         time.sleep(0.05)
 
 
@@ -307,6 +308,7 @@ movement_thread = threading.Thread(target=check_movement_timeout)
 movement_thread.daemon = True
 movement_thread.start()
 
+# Start the camera angle thread
 angle_thread = threading.Thread(target=update_angle)
 angle_thread.daemon = True
 angle_thread.start()
